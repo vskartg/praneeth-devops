@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creating Autoscaling Group, Launch Template, Target Group, and NLB with CloudFormation
+
+Resources:
+  praneethLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: praneeth-ASG-LT
+      LaunchTemplateData:
+        ImageId: ami-09988af04120b3591
+        InstanceType: t2.micro
+        KeyName: praneeth
+        SecurityGroupIds:
+        - !GetAtt praneethSG.GroupId
+        
+  praneethSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+  
+  praneethELB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: praneeth-ASG-NLB   
+      Type: network
+      Subnets: 
+        - subnet-031d506adca4ad569
+        - subnet-09f5de7179cfc80d3
+      
+  praneethTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties: 
+      Name: praneeth-ASG-NLB-TG
+      Port: 80
+      Protocol: TCP
+      VpcId: vpc-0629ff7307588156b
+
+  PraneethNLBListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref praneethTG
+      LoadBalancerArn: !Ref praneethELB
+      Port: 80
+      Protocol: TCP
+  
+  praneethASG:  
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties: 
+      AutoScalingGroupName: ASG-Web
+      HealthCheckType: ELB
+      LaunchTemplate: 
+        LaunchTemplateId: !Ref praneethLaunchTemplate
+        Version: !GetAtt praneethLaunchTemplate.LatestVersionNumber
+      MaxSize: '3'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      # Tags: 
+      #   - TagProperty
+      TargetGroupARNs: 
+        - !Ref praneethTG
+      VPCZoneIdentifier: 
+        - subnet-031d506adca4ad569
+        - subnet-09f5de7179cfc80d3

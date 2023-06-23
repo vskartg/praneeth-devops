@@ -1,17 +1,42 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Creating VPC with a pair of public and private subnets spread across two Availability Zones.
-Created Network ACLs along with rules. Also deploys an internet gateway, NAT gateway, Route Tables along with routes.
+Description: "Creating VPC with a pair of public and private subnets spread across two Availability Zones.
+Created Network ACLs along with rules. Also deploys an internet gateway, NAT gateway, Route Tables along with routes."
 
 Parameters:
   EnvironmentName:
     Description: An environment name that is prefixed to resource names
     Type: String
 
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.0.0.0/21
+
+  PublicSubnet1CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.0.0.0/24
+
+  PublicSubnet2CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the second Availability Zone
+    Type: String
+    Default: 10.0.1.0/24
+
+  PrivateSubnet1CIDR:
+    Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
+    Type: String
+    Default: 10.0.2.0/24
+
+  PrivateSubnet2CIDR:
+    Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
+    Type: String
+    Default: 10.0.3.0/24
+
 Resources:
   myVPC:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: 10.1.0.0/21
+      CidrBlock: !Ref VpcCIDR
       # EnableDnsSupport: true
       # EnableDnsHostnames: true
       Tags:
@@ -49,11 +74,11 @@ Resources:
       VpcId: !Ref myVPC
       # AvailabilityZone: !Select [ 0, !GetAZs '' ]
       AvailabilityZone: "us-east-1a"
-      CidrBlock: 10.1.0.0/24
+      CidrBlock: !Ref PublicSubnet1CIDR
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: pk-pub-subnet-us-east-1a
+          Value: !Sub ${EnvironmentName}-pub-subnet-us-east-1a
           # Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
 
   myPublicSubnet2:
@@ -62,33 +87,33 @@ Resources:
       VpcId: !Ref myVPC
       # AvailabilityZone: !Select [ 0, !GetAZs '' ]
       AvailabilityZone: "us-east-1b"
-      CidrBlock: 10.1.1.0/24
+      CidrBlock: !Ref PublicSubnet2CIDR
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: pk-pub-subnet-us-east-1b
+          Value: !Sub ${EnvironmentName}-pub-subnet-us-east-1b
 
   myPrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref myVPC
       AvailabilityZone: "us-east-1a"
-      CidrBlock: 10.1.2.0/24
+      CidrBlock: !Ref PrivateSubnet1CIDR
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: pk-private-subnet-us-east-1a
+          Value: !Sub ${EnvironmentName}-private-subnet-us-east-1a
 
   myPrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref myVPC
       AvailabilityZone: "us-east-1b"
-      CidrBlock: 10.1.3.0/24
+      CidrBlock: !Ref PrivateSubnet2CIDR
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: pk-private-subnet-us-east-1b
+          Value: !Sub ${EnvironmentName}-private-subnet-us-east-1b
 
   myNetworkAcl1:
     Type: AWS::EC2::NetworkAcl
@@ -96,7 +121,7 @@ Resources:
       VpcId: !Ref myVPC
       Tags:
          - Key: Name
-           Value: pk-pub-nacl
+           Value: !Sub ${EnvironmentName}-pub-nacl
 
   PublicSubnet1NetworkAclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
@@ -162,7 +187,7 @@ Resources:
       VpcId: !Ref myVPC
       Tags:
          - Key: Name
-           Value: pk-private-nacl
+           Value: !Sub ${EnvironmentName}-private-nacl
 
   PrivateSubnet1NetworkAclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
@@ -204,7 +229,7 @@ Resources:
       VpcId: !Ref myVPC
       Tags:
         - Key: Name
-          Value: pk-pub-rt-us-east-1
+          Value: !Sub ${EnvironmentName}-pub-rt-us-east-1
 
   myPubRoute:
     Type: AWS::EC2::Route
@@ -232,7 +257,7 @@ Resources:
       VpcId: !Ref myVPC
       Tags:
         - Key: Name
-          Value: pk-private-rt-us-east-1
+          Value: !Sub ${EnvironmentName}-private-rt-us-east-1
 
   myPrivateRoute:
     Type: AWS::EC2::Route
@@ -252,19 +277,3 @@ Resources:
     Properties:
       RouteTableId: !Ref myPrivateRouteTable1
       SubnetId: !Ref myPrivateSubnet2
-  
-
-
-
-
-
-  
-
-  
-
-  # NoIngressSecurityGroup:
-  #   Type: AWS::EC2::SecurityGroup
-  #   Properties:
-  #     GroupName: "no-ingress-sg"
-  #     GroupDescription: "Security group with no ingress rule"
-  #     VpcId: !Ref VPC

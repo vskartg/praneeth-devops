@@ -1,11 +1,30 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+    }
+
     stages {
-        stage('Build and Deploy') {
+        stage('Build') {
             steps {
                 sh 'sudo docker build -t praneethkaliki/praneethapp:V1ec2AL2 docker/firstDockerfile/'          
             }
         }
+        stage('Login') {
+            steps {
+                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+            }
+        }
+        stage('Push') {
+            steps {
+                sh 'docker push praneethkaliki/praneethapp:V1ec2AL2'
+            }
+        }
     }
+    post {
+        always {
+            sh 'docker logout'
+        }
+  }
 }

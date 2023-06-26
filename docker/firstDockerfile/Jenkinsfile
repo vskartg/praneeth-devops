@@ -3,12 +3,15 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+        IMAGE_NAME = "praneethapp"
+        VERSION = "V1"
+        FULL_IMAGE_NAME = "$DOCKERHUB_CREDENTIALS_USR/$IMAGE_NAME:$VERSION"
     }
 
     stages {
         stage('Build') {
             steps {
-                sh 'sudo docker build -t praneethkaliki/praneethapp:V1ec2AL2 docker/firstDockerfile/'          
+                sh 'sudo docker build -t $FULL_IMAGE_NAME docker/firstDockerfile/'          
             }
         }
         stage('Login') {
@@ -18,7 +21,7 @@ pipeline {
         }
         stage('Push') {
             steps {
-                sh 'docker push praneethkaliki/praneethapp:V1ec2AL2'
+                sh 'docker push $FULL_IMAGE_NAME'
             }
         }
     }
@@ -26,5 +29,5 @@ pipeline {
         always {
             sh 'docker logout'
         }
-  }
+    }
 }

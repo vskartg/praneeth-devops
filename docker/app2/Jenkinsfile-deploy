@@ -1,5 +1,5 @@
 pipeline {
-    agent docker
+    agent {label 'docker'}
 
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub')
@@ -16,7 +16,7 @@ pipeline {
         }
         stage('Run') {
             steps {
-                sh 'docker run -d --name $IMAGE_NAME$VERSION6000 -p 6000:3000 $FULL_IMAGE_NAME'
+                sh 'docker run -d --name $IMAGE_NAME$VERSION6000 -p 32768:3000 $FULL_IMAGE_NAME'
             }
         }
     }

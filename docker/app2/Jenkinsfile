@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub')
-        IMAGE_NAME = "newplace"
+        IMAGE_NAME = "chetana.js"
         VERSION = "1.0"
         FULL_IMAGE_NAME = "$DOCKERHUB_CREDENTIALS_USR/$IMAGE_NAME:$VERSION"
     }
